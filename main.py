@@ -1,8 +1,16 @@
-import os, time, telebot, json, datetime, sqlite3, requests
+import os
+import time
+import telebot
+import json
+import datetime
+import sqlite3
+import requests
 from telebot import types
 from currency_symbols import CurrencySymbols
 
-instraction_path = os.path.abspath(os.path.join(os.path.dirname(__file__), 'static', 'pictures', 'instraction.jpg'))
+instruction_path = os.path.abspath(os.path.join(os.path.dirname(__file__), 'static', 'images', 'instruction.jpg'))
+ratio_path = os.path.abspath(os.path.join(os.path.dirname(__file__), 'static', 'json', 'ratio.json'))
+config_path = os.path.abspath(os.path.join(os.path.dirname(__file__), 'static', 'json', 'config.json'))
 
 
 conn = sqlite3.connect('bems', check_same_thread=False)
@@ -14,14 +22,14 @@ def db_table_val(user_id: int, name: str, username: str, last_usage: datetime.da
         cursor.execute('INSERT INTO users (user_id, name, username, last_usage) VALUES (?, ?, ?, ?)',
                        (user_id, name, username, last_usage))
     except sqlite3.IntegrityError:
-        cursor.execute('UPDATE users SET last_usage = ? WHERE id = ?', (last_usage, user_id))
+        cursor.execute('UPDATE users SET last_usage = ? WHERE user_id = ?', (last_usage, user_id))
     conn.commit()
 
 
-with open('config.json', 'r', encoding='utf-8') as file:
+with open(config_path, 'r', encoding='utf-8') as file:
     lib = json.load(file)
 
-with open('ratio.json', 'r', encoding='utf-8') as file:
+with open(ratio_path, 'r', encoding='utf-8') as file:
     items = json.load(file)
 
 bot = telebot.TeleBot(lib['token'])
@@ -67,7 +75,7 @@ delivery_keyboard: types.ReplyKeyboardMarkup = create_keyboard_buttons([
 def menu(message: telebot.types.Message) -> None:
     if message.text == lib['button_text1']:
         time.sleep(0.3)
-        bot.send_photo(message.chat.id, photo=open(instraction_path, 'rb'), parse_mode='html')
+        bot.send_photo(message.chat.id, photo=open(instruction_path, 'rb'), parse_mode='html')
         return
     if message.text == lib['button_text2']:
         currency = requests.get('https://www.cbr-xml-daily.ru/daily_json.js').json()
